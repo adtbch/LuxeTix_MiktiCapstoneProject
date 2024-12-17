@@ -39,16 +39,57 @@ func PublicRoutes(event handler.EventHandler, user handler.UserHandler) []route.
 			Path:    "/verify-email/:token",
 			Handler: user.VerifyEmail,
 		},
-	}
-}
-
-func PrivateRoutes(event handler.EventHandler, user handler.UserHandler) []route.Route {
-	return []route.Route{
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/sort/expensive",
+			Handler: event.SortFromExpensivestToCheapest,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/sort/cheapest",
+			Handler: event.SortFromCheapestToExpensivest,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/sort/newest",
+			Handler: event.SortNewestToOldest,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/filterByCategory/:category",
+			Handler: event.FilteringByCategory,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/filterByLocation/:location",
+			Handler: event.FilteringByLocation,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/filterByDate/:date",
+			Handler: event.FilteringByDate,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/filterByPrice/:price",
+			Handler: event.FilteringByPrice,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/events/filterByMinPriceAndMaxPrice/:min_price/:max_price",
+			Handler: event.FilteringMInMaxPrice, // corrected the typo
+		},
 		{
 			Method:  http.MethodGet,
 			Path:    "/events/:id",
 			Handler: event.GetEvent,
 		},
+	}
+}
+
+func PrivateRoutes(event handler.EventHandler, user handler.UserHandler) []route.Route {
+	return []route.Route{
+
 		{
 			Method:  http.MethodPost,
 			Path:    "/events",

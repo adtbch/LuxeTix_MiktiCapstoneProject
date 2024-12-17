@@ -46,3 +46,28 @@ type UpdateEventByUserRequest struct {
 	Category      string `json:"category" validate:"required"`
 	Date          string `json:"date" validate:"required"`
 }
+
+type FilterMInMaxPrice struct {
+	MinPrice int64 `param:"min_price" validate:"required"`
+	MaxPrice int64 `param:"max_price" validate:"required"`
+}
+
+type FilterCategory struct {
+	Category string `param:"category" validate:"required"`
+}
+
+type FilterLocation struct {
+	Location string `param:"location" validate:"required"`	
+}
+
+type FilterPrice struct {
+	Price int64 `param:"price" validate:"required"`
+}
+
+type FilterDate struct {
+	Date string `param:"date" validate:"required"`
+}
+
+type FilterTime struct {
+	Time string `param:"time" validate:"required"`
+}

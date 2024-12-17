@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/entity"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/dto"
@@ -12,12 +12,20 @@ import (
 type EventService interface {
 	GetAll(ctx context.Context) ([]entity.Event, error)
 	GetById(ctx context.Context, id int64) (*entity.Event, error)
-	CreateEventByUser(ctx context.Context, req dto.CreateEventRequest, tran dto.CreateEventTransactionRequest) error
+	CreateEventByUser(ctx context.Context, req dto.CreateEventRequest) error
 	Delete(ctx context.Context, event *entity.Event) error
 	UpdateEventbyUser(ctx context.Context, req dto.UpdateEventByUserRequest) error
 	UpdateEventbyAdmin(ctx context.Context, req dto.UpdateEventByAdminRequest) error
 	GetByIDPending(ctx context.Context, id int64) (*entity.Event, error)
-	GetAllPending(ctx context.Context) (*entity.Event, error)
+	GetAllPending(ctx context.Context) ([]entity.Event, error)
+	SortFromExpensivestToCheapest(ctx context.Context) ([]entity.Event, error)
+	SortFromCheapestToExpensivest(ctx context.Context) ([]entity.Event, error)
+	SortNewestToOldest(ctx context.Context) ([]entity.Event, error)
+	FilteringByCategory(ctx context.Context, category string) ([]entity.Event, error)
+	FilteringByLocation(ctx context.Context, location string) ([]entity.Event, error)
+	FilteringByPrice(ctx context.Context, price int64) ([]entity.Event, error)
+	FilteringByDate(ctx context.Context, date string) ([]entity.Event, error)
+	FilterMaxMinPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error)
 }
 
 type eventService struct {
@@ -29,22 +37,31 @@ func NewEventService(eventRepository repository.EventRepository, transactionRepo
 	return &eventService{eventRepository, transactionRepository}
 }
 
-func (s eventService) GetAll(ctx context.Context) ([]entity.Event, error) {
+// Get all events
+func (s *eventService) GetAll(ctx context.Context) ([]entity.Event, error) {
 	return s.EventRepository.GetAll(ctx)
 }
 
-func (s eventService) GetById(ctx context.Context, id int64) (*entity.Event, error) {
+// Get event by ID
+func (s *eventService) GetById(ctx context.Context, id int64) (*entity.Event, error) {
 	return s.EventRepository.GetById(ctx, id)
 }
 
-func (s *eventService) CreateEventByUser(ctx context.Context, req dto.CreateEventRequest, tran dto.CreateEventTransactionRequest) error {
-	// Pastikan UserID yang diterima dari request sudah valid
+// Create event by user
+func (s *eventService) CreateEventByUser(ctx context.Context, req dto.CreateEventRequest) error {
+	// Ensure valid userID
 	userID := req.UserID
 	if userID == 0 {
-		return fmt.Errorf("invalid UserID")
+		return errors.New("invalid user ID")
 	}
 
-	// Membuat event baru berdasarkan data dari request body
+	// Determine request status (paid/unpaid) based on price
+	statusRequest := "unpaid"
+	if req.Price == 0 {
+		statusRequest = "paid"
+	}
+
+	// Create the event
 	event := &entity.Event{
 		Title:         req.Title,
 		Location:      req.Location,
@@ -52,47 +69,48 @@ func (s *eventService) CreateEventByUser(ctx context.Context, req dto.CreateEven
 		Date:          req.Date,
 		Price:         req.Price,
 		Description:   req.Description,
-		StatusRequest: "unpaid",
+		StatusRequest: statusRequest,
 		StatusEvent:   "available",
-		UserID:        userID, // UserID sudah dikirim dari handler
+		UserID:        userID,
 		Category:      req.Category,
 		Quantity:      req.Quantity,
 	}
 
-	// Simpan event ke database
+	// Save event to database
 	if err := s.EventRepository.Create(ctx, event); err != nil {
-		return err // Menangani error saat menyimpan event
+		return err
 	}
 
-	// Ambil EventID yang baru dibuat
-	eventID := event.ID // event.ID adalah ID yang dihasilkan oleh DB setelah event disimpan
+	// If price > 0, create a transaction
+	if req.Price > 0 {
+		eventID := event.ID
+		total := int64(float64(req.Price) * 0.2) // Example: 20% of event price
 
-	// Hitung total transaksi (misalnya, 20% dari harga event)
-	total := int64(float64(req.Price) * 0.2) // Pastikan perhitungan yang tepat
+		transaction := &entity.Transaction{
+			EventID:  eventID,
+			UserID:   userID,
+			Total:    total,
+			Status:   "unpaid",
+			Quantity: 1,
+		}
 
-	// Membuat transaksi dengan EventID yang baru
-	transaction := &entity.Transaction{
-		EventID:  eventID,
-		UserID:   userID,
-		Total:    total,
-		Status:   "unpaid",
-		Quantity: 1,
-	}
-
-	// Simpan transaksi ke database
-	if err := s.TransactionRepository.Create(ctx, transaction); err != nil {
-		return err // Menangani error saat menyimpan transaksi
+		// Create transaction
+		if err := s.TransactionRepository.Create(ctx, transaction); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (s eventService) UpdateEventbyUser(ctx context.Context, req dto.UpdateEventByUserRequest) error {
+// Update event by user
+func (s *eventService) UpdateEventbyUser(ctx context.Context, req dto.UpdateEventByUserRequest) error {
 	event, err := s.EventRepository.GetById(ctx, req.ID)
-
 	if err != nil {
 		return err
 	}
+
+	// Update fields if provided
 	if req.Title != "" {
 		event.Title = req.Title
 	}
@@ -117,15 +135,19 @@ func (s eventService) UpdateEventbyUser(ctx context.Context, req dto.UpdateEvent
 	if req.Category != "" {
 		event.Category = req.Category
 	}
+
+	// Save updated event
 	return s.EventRepository.Update(ctx, event)
 }
 
-func (s eventService) UpdateEventbyAdmin(ctx context.Context, req dto.UpdateEventByAdminRequest) error {
+// Update event by admin
+func (s *eventService) UpdateEventbyAdmin(ctx context.Context, req dto.UpdateEventByAdminRequest) error {
 	event, err := s.EventRepository.GetById(ctx, req.ID)
-
 	if err != nil {
 		return err
 	}
+
+	// Admin updates event fields
 	if req.Title != "" {
 		event.Title = req.Title
 	}
@@ -147,17 +169,62 @@ func (s eventService) UpdateEventbyAdmin(ctx context.Context, req dto.UpdateEven
 	if req.Category != "" {
 		event.Category = req.Category
 	}
+
+	// Save updated event
 	return s.EventRepository.Update(ctx, event)
 }
 
-func (s eventService) Delete(ctx context.Context, event *entity.Event) error {
+// Delete event
+func (s *eventService) Delete(ctx context.Context, event *entity.Event) error {
 	return s.EventRepository.Delete(ctx, event)
 }
 
-func (s eventService) GetByIDPending(ctx context.Context, id int64) (*entity.Event, error) {
+// Get event by ID (pending)
+func (s *eventService) GetByIDPending(ctx context.Context, id int64) (*entity.Event, error) {
 	return s.EventRepository.GetByIDPending(ctx, id)
 }
 
-func (s eventService) GetAllPending(ctx context.Context) (*entity.Event, error) {
+// Get all pending events
+func (s *eventService) GetAllPending(ctx context.Context) ([]entity.Event, error) {
 	return s.EventRepository.GetAllPending(ctx)
+}
+
+// Sort events from expensive to cheapest
+func (s *eventService) SortFromExpensivestToCheapest(ctx context.Context) ([]entity.Event, error) {
+	return s.EventRepository.SortFromExpensivestToCheapest(ctx)
+}
+
+// Sort events from cheapest to expensive
+func (s *eventService) SortFromCheapestToExpensivest(ctx context.Context) ([]entity.Event, error) {
+	return s.EventRepository.SortFromCheapestToExpensivest(ctx)
+}
+
+// Sort events from newest to oldest
+func (s *eventService) SortNewestToOldest(ctx context.Context) ([]entity.Event, error) {
+	return s.EventRepository.SortNewestToOldest(ctx)
+}
+
+// Filter events by category
+func (s *eventService) FilteringByCategory(ctx context.Context, category string) ([]entity.Event, error) {
+	return s.EventRepository.FilteringByCategory(ctx, category)
+}
+
+// Filter events by location
+func (s *eventService) FilteringByLocation(ctx context.Context, location string) ([]entity.Event, error) {
+	return s.EventRepository.FilteringByLocation(ctx, location)
+}
+
+// Filter events by price
+func (s *eventService) FilteringByPrice(ctx context.Context, price int64) ([]entity.Event, error) {
+	return s.EventRepository.FilteringByPrice(ctx, price)
+}
+
+// Filter events by date
+func (s *eventService) FilteringByDate(ctx context.Context, date string) ([]entity.Event, error) {
+	return s.EventRepository.FilteringByDate(ctx, date)
+}
+
+// Filter events by min and max price
+func (s *eventService) FilterMaxMinPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error) {
+	return s.EventRepository.FilteringByMinMaxPrice(ctx, minPrice, maxPrice)
 }
