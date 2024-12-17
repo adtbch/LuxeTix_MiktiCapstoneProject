@@ -1,0 +1,29 @@
+[33mcommit b821e80625ad652cc2c64c557e31bf6a435b0ba3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Aditya Bachtiar <adit.bachtiar091@gmail.com>
+Date:   Sat Dec 14 18:14:47 2024 +0700
+
+    add event service
+
+[33mcommit eee8b35b8d25064ff10fd883129553e6816414c7[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: Aditya Bachtiar <adit.bachtiar091@gmail.com>
+Date:   Sun Dec 8 17:39:27 2024 +0700
+
+    add go.mod
+
+[33mcommit f0b38a04034ffe9c42d530d842f5bd2745730ba6[m
+Author: Aditya Bachtiar <adit.bachtiar091@gmail.com>
+Date:   Thu Dec 5 21:30:47 2024 +0700
+
+    add desain patern
+
+[33mcommit b9aabce00a66b7c92e3fe1b99a31e1f2f7d29cba[m
+Author: Aditya Bachtiar <adit.bachtiar091@gmail.com>
+Date:   Thu Dec 5 21:17:23 2024 +0700
+
+    add migration and desain patern
+
+[33mcommit 98a88bd522ed22f59c520cb89061bc8dbc9dfb21[m
+Author: Rafi Noor Islami <rafinoorislami@Yu.local>
+Date:   Mon Dec 2 19:29:42 2024 +0700
+
+    push mark down as a test

@@ -27,7 +27,7 @@ func NewServer(cfg *config.Config, publicRoutes, privateRoutes []route.Route) *S
 
 	if len(privateRoutes) > 0 {
 		for _, route := range privateRoutes {
-			v1.Add(route.Method, route.Path, route.Handler, JWTMiddleware(cfg.JWTConfig.SecretKey), RBACMiddleware(route.Roles))
+			v1.Add(route.Method, route.Path, route.Handler, JWTMiddleware(cfg.JWTConfig.SecretKey))
 		}
 	}
 	return &Server{e}
@@ -45,25 +45,25 @@ func JWTMiddleware(secretKey string) echo.MiddlewareFunc {
 	})
 }
 
-func RBACMiddleware(roles []string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			user := c.Get("user").(*jwt.Token)
-			claims := user.Claims.(*entity.JWTCustomClaims)
-			allowed := false
+// func RBACMiddleware(roles []string) echo.MiddlewareFunc {
+// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
+// 		return func(c echo.Context) error {
+// 			user := c.Get("user").(*jwt.Token)
+// 			claims := user.Claims.(*entity.JWTCustomClaims)
+// 			allowed := false
 
-			for _, role := range roles {
-				if role == claims.Role {
-					allowed = true
-					break
-				}
-			}
+// 			for _, role := range roles {
+// 				if role == claims.Role {
+// 					allowed = true
+// 					break
+// 				}
+// 			}
 
-			if !allowed {
-				return c.JSON(http.StatusForbidden, response.ErrorResponse(http.StatusForbidden, "anda tidak memiliki akses ke resource ini"))
-			}
+// 			if !allowed {
+// 				return c.JSON(http.StatusForbidden, response.ErrorResponse(http.StatusForbidden, "anda tidak memiliki akses ke resource ini"))
+// 			}
 
-			return next(c)
-		}
-	}
-}
+// 			return next(c)
+// 		}
+// 	}
+// }

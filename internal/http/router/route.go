@@ -7,13 +7,43 @@ import (
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/route"
 )
 
-func PublicRoutes(event handler.EventHandler) []route.Route {
+func PublicRoutes(event handler.EventHandler, user handler.UserHandler) []route.Route {
 	return []route.Route{
 		{
 			Method:  http.MethodGet,
 			Path:    "/events",
 			Handler: event.GetEvents,
 		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/login",
+			Handler: user.Login,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/register",
+			Handler: user.Register,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/request-reset-password",
+			Handler: user.ResetPasswordRequest,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/reset-password/:token",
+			Handler: user.ResetPassword,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/verify-email/:token",
+			Handler: user.VerifyEmail,
+		},
+	}
+}
+
+func PrivateRoutes(event handler.EventHandler, user handler.UserHandler) []route.Route {
+	return []route.Route{
 		{
 			Method:  http.MethodGet,
 			Path:    "/events/:id",
@@ -27,7 +57,7 @@ func PublicRoutes(event handler.EventHandler) []route.Route {
 		{
 			Method:  http.MethodPut,
 			Path:    "/events/:id",
-			Handler: event.UpdateEvent,
+			Handler: event.UpdateEventByUser,
 		},
 		{
 			Method:  http.MethodDelete,
@@ -35,8 +65,4 @@ func PublicRoutes(event handler.EventHandler) []route.Route {
 			Handler: event.DeleteEvent,
 		},
 	}
-}
-
-func PrivateRoutes(event handler.EventHandler) []route.Route {
-	return []route.Route{}
 }

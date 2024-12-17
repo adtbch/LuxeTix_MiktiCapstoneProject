@@ -14,31 +14,42 @@ import (
 func BuilderPublicRoutes(cfg *config.Config, db *gorm.DB) []route.Route {
 	//repository
 	eventRepository := repository.NewEventRepository(db)
+	transactionRepository := repository.NewTransactionRepository(db)
+	userRepository := repository.NewUserRepository(db)
 	//end
 
 	//service
-	eventService := service.NewEventService(eventRepository)
+	tokenService := service.NewTokenService(cfg.JWTConfig.SecretKey)
+	userService := service.NewUserService(tokenService, cfg, userRepository)
+	eventService := service.NewEventService(eventRepository, transactionRepository)
 	//end
 
 	//handler
-	eventHandler := handler.NewEventHandler(eventService)
+	eventHandler := handler.NewEventHandler(eventService, tokenService)
+	userHandler := handler.NewUserHandler(tokenService, userService)
 	//end
 
-	return router.PublicRoutes(eventHandler)
+	return router.PublicRoutes(eventHandler, userHandler)
 }
 
 func BuilderPrivateRoutes(cfg *config.Config, db *gorm.DB) []route.Route {
 	//repository
-	_ = repository.NewEventRepository(db)
+	eventRepository := repository.NewEventRepository(db)
+	transactionRepository := repository.NewTransactionRepository(db)
+	userRepository := repository.NewUserRepository(db)
 	//end
 
 	//service
+	tokenService := service.NewTokenService(cfg.JWTConfig.SecretKey)
+	userService := service.NewUserService(tokenService, cfg, userRepository)
+	eventService := service.NewEventService(eventRepository, transactionRepository)
 	// _ = service.NewEventService()
 	//end
 
 	//handler
-	// _ = handler.NewEventHandler()
+	eventHandler := handler.NewEventHandler(eventService, tokenService)
+	userHandler := handler.NewUserHandler(tokenService, userService)
 	//end
 
-	return nil
+	return router.PrivateRoutes(eventHandler, userHandler)
 }
