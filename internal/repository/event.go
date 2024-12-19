@@ -25,6 +25,7 @@ type EventRepository interface {
 	FilteringByTime(ctx context.Context, time string) ([]entity.Event, error)
 	FilteringByDate(ctx context.Context, date string) ([]entity.Event, error)
 	FilteringByMinMaxPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error)
+	SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error)
 }
 
 // eventRepository is the implementation of EventRepository interface.
@@ -164,6 +165,14 @@ func (r *eventRepository) FilteringByDate(ctx context.Context, date string) ([]e
 func (r *eventRepository) FilteringByMinMaxPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error) {
 	var result []entity.Event
 	if err := r.db.WithContext(ctx).Where("price BETWEEN ? AND ?", minPrice, maxPrice).Find(&result).Error; err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (r *eventRepository) SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error) {
+	var result []entity.Event
+	if err := r.db.WithContext(ctx).Where("name %like ?", keyword).Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil

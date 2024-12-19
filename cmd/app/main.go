@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/config"
+	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/builder"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/database"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/server"
-	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/builder"
 )
 
 func main() {
@@ -19,7 +19,8 @@ func main() {
 	cfg, err := config.NewConfig(".env")
 	checkError(err)
 	//init & start database
-	db, err := database.InitDatabase(cfg.MySQLConfig)
+	db, err := database.InitDatabase(cfg.PostgresConfig)
+	checkError(err)
 	//RBAC
 	publicRoutes := builder.BuilderPublicRoutes(cfg, db)
 	privateRoutes := builder.BuilderPrivateRoutes(cfg, db)

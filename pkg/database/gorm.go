@@ -4,20 +4,26 @@ import (
 	"fmt"
 
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/config"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres" // Ganti driver MySQL dengan PostgreSQL
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func InitDatabase(mysqlconfig config.MySQLConfig) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		mysqlconfig.User,
-		mysqlconfig.Password,
-		mysqlconfig.Host,
-		mysqlconfig.Port,
-		mysqlconfig.Database,
+func InitDatabase(postgresConfig config.PostgresConfig) (*gorm.DB, error) {
+	// Format string DSN untuk PostgreSQL
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		postgresConfig.Host,
+		postgresConfig.Port,
+		postgresConfig.User,
+		postgresConfig.Password,
+		postgresConfig.Database,
+		postgresConfig.SSLMode, // Menggunakan pengaturan SSL
 	)
-	return gorm.Open(mysql.Open(dsn), &gorm.Config{
+
+	// Koneksi ke database PostgreSQL menggunakan GORM
+	return gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn, // Data Source Name
+	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 }

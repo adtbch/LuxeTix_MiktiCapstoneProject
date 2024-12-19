@@ -26,6 +26,7 @@ type EventService interface {
 	FilteringByPrice(ctx context.Context, price int64) ([]entity.Event, error)
 	FilteringByDate(ctx context.Context, date string) ([]entity.Event, error)
 	FilterMaxMinPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error)
+	SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error)
 }
 
 type eventService struct {
@@ -227,4 +228,8 @@ func (s *eventService) FilteringByDate(ctx context.Context, date string) ([]enti
 // Filter events by min and max price
 func (s *eventService) FilterMaxMinPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error) {
 	return s.EventRepository.FilteringByMinMaxPrice(ctx, minPrice, maxPrice)
+}
+
+func (s *eventService) SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error) {
+	return s.EventRepository.SearchEvent(ctx, keyword)
 }

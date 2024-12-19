@@ -149,7 +149,6 @@ func (h *EventHandler) DeleteEvent(ctx echo.Context) error {
 	return h.handleSuccessResponse(ctx, http.StatusOK, "Successfully deleted an event", nil)
 }
 
-
 func (h *EventHandler) SortFromCheapestToExpensivest(ctx echo.Context) error {
 	events, err := h.eventService.SortFromCheapestToExpensivest(ctx.Request().Context())
 	if err != nil {
@@ -250,4 +249,19 @@ func (h *EventHandler) FilteringMInMaxPrice(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully showing all events", events))
+}
+
+func (h *EventHandler) SearchEvent(ctx echo.Context) error {
+	var req dto.SearchEvent
+
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+
+	events, err := h.eventService.SearchEvent(ctx.Request().Context(), req.Keyword)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully showing events", events))
 }

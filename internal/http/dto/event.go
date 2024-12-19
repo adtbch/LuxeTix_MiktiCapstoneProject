@@ -71,3 +71,7 @@ type FilterDate struct {
 type FilterTime struct {
 	Time string `param:"time" validate:"required"`
 }
+
+type SearchEvent struct {
+	Keyword string `param:"keyword" validate:"required"`
+}
