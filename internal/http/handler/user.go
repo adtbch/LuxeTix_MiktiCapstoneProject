@@ -160,3 +160,36 @@ func (h *UserHandler) VerifyEmail(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, response.SuccessResponse("successfully verify email", nil))
 }
+
+func (h *UserHandler) GetProfil(ctx echo.Context) error {
+	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+
+	user, err := h.userService.GetById(ctx.Request().Context(), userID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("successfully showing profil", user))
+}
+
+func (h *UserHandler) UpdateProfil(ctx echo.Context) error {
+	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+	
+	var req dto.UpdateUserRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+	req.ID = userID
+
+	err = h.userService.Update(ctx.Request().Context(), req)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("successfully update user", nil))
+}

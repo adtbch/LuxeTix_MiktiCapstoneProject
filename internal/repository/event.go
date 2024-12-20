@@ -2,30 +2,22 @@ package repository
 
 import (
 	"context"
+	"strings"
 
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/entity"
+	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/dto"
 	"gorm.io/gorm"
 )
 
 // EventRepository defines the interface for event-related database operations.
 type EventRepository interface {
-	GetAll(ctx context.Context) ([]entity.Event, error)
+	GetAll(ctx context.Context, req dto.GetAllEventRequest) ([]entity.Event, error)
 	GetById(ctx context.Context, id int64) (*entity.Event, error)
 	Create(ctx context.Context, event *entity.Event) error
 	Update(ctx context.Context, event *entity.Event) error
 	Delete(ctx context.Context, event *entity.Event) error
 	GetByIDPending(ctx context.Context, id int64) (*entity.Event, error)
 	GetAllPending(ctx context.Context) ([]entity.Event, error)
-	SortFromExpensivestToCheapest(ctx context.Context) ([]entity.Event, error)
-	SortFromCheapestToExpensivest(ctx context.Context) ([]entity.Event, error)
-	SortNewestToOldest(ctx context.Context) ([]entity.Event, error)
-	FilteringByCategory(ctx context.Context, category string) ([]entity.Event, error)
-	FilteringByLocation(ctx context.Context, location string) ([]entity.Event, error)
-	FilteringByPrice(ctx context.Context, price int64) ([]entity.Event, error)
-	FilteringByTime(ctx context.Context, time string) ([]entity.Event, error)
-	FilteringByDate(ctx context.Context, date string) ([]entity.Event, error)
-	FilteringByMinMaxPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error)
-	SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error)
 }
 
 // eventRepository is the implementation of EventRepository interface.
@@ -39,11 +31,66 @@ func NewEventRepository(db *gorm.DB) EventRepository {
 }
 
 // GetAll retrieves all events from the database.
-func (r *eventRepository) GetAll(ctx context.Context) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Find(&result).Error; err != nil {
+func (r *eventRepository) GetAll(ctx context.Context, req dto.GetAllEventRequest) ([]entity.Event, error) {
+	result := make([]entity.Event, 0)
+	query := r.db.WithContext(ctx)
+
+	// Pencarian berdasarkan title (case-insensitive)
+	if req.Search != "" {
+		search := strings.ToLower(req.Search)
+		query = query.Where("LOWER(title) LIKE ?", "%"+search+"%")
+	}
+
+	// Filter kategori (opsional, misalnya untuk kategori yang diinginkan)
+	if req.Filter != "" {
+		filter := strings.ToLower(req.Filter)
+		query = query.Where("LOWER(category) = ?", filter)
+	}
+
+	// Filter tambahan dari kode pertama
+	if req.MinPrice > 0 {
+		query = query.Where("price >= ?", req.MinPrice)
+	}
+	if req.MaxPrice > 0 {
+		query = query.Where("price <= ?", req.MaxPrice)
+	}
+	if req.Category != "" {
+		query = query.Where("category = ?", req.Category)
+	}
+	if req.Location != "" {
+		query = query.Where("location LIKE ?", "%"+req.Location+"%")
+	}
+	if req.Time != "" {
+		query = query.Where("time = ?", req.Time)
+	}
+	if req.Date != "" {
+		query = query.Where("date = ?", req.Date)
+	}
+	if req.StatusEvent != "" {
+		query = query.Where("status_event = ?", req.StatusEvent)
+	}
+	if req.StatusRequest != "" {
+		query = query.Where("status_request = ?", req.StatusRequest)
+	}
+	if req.Price > 0 {
+		query = query.Where("price = ?", req.Price)
+	}
+
+	// Sorting
+	if req.Sort != "" && req.Order != "" {
+		query = query.Order(req.Sort + " " + req.Order)
+	}
+
+	// Pagination
+	if req.Page > 0 && req.Limit > 0 {
+		query = query.Offset((req.Page - 1) * req.Limit).Limit(req.Limit)
+	}
+
+	// Eksekusi query
+	if err := query.Find(&result).Error; err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
@@ -87,93 +134,4 @@ func (r *eventRepository) Update(ctx context.Context, event *entity.Event) error
 // Delete removes an event from the database.
 func (r *eventRepository) Delete(ctx context.Context, event *entity.Event) error {
 	return r.db.WithContext(ctx).Delete(&event).Error
-}
-
-// SortFromExpensivestToCheapest retrieves events sorted from the most expensive to the cheapest.
-func (r *eventRepository) SortFromExpensivestToCheapest(ctx context.Context) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Order("price DESC").Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// SortFromCheapestToExpensivest retrieves events sorted from the cheapest to the most expensive.
-func (r *eventRepository) SortFromCheapestToExpensivest(ctx context.Context) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Order("price ASC").Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// SortNewestToOldest retrieves events sorted from newest to oldest.
-func (r *eventRepository) SortNewestToOldest(ctx context.Context) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Order("created_at DESC").Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByCategory retrieves events by category.
-func (r *eventRepository) FilteringByCategory(ctx context.Context, category string) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("category = ?", category).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByLocation retrieves events by location.
-func (r *eventRepository) FilteringByLocation(ctx context.Context, location string) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("location %like ?", location).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByPrice retrieves events by exact price.
-func (r *eventRepository) FilteringByPrice(ctx context.Context, price int64) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("price = ?", price).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByTime retrieves events by exact time.
-func (r *eventRepository) FilteringByTime(ctx context.Context, time string) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("time = ?", time).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByDate retrieves events by date.
-func (r *eventRepository) FilteringByDate(ctx context.Context, date string) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("date = ?", date).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// FilteringByMinMaxPrice retrieves events with a price between minPrice and maxPrice.
-func (r *eventRepository) FilteringByMinMaxPrice(ctx context.Context, minPrice int64, maxPrice int64) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("price BETWEEN ? AND ?", minPrice, maxPrice).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (r *eventRepository) SearchEvent(ctx context.Context, keyword string) ([]entity.Event, error) {
-	var result []entity.Event
-	if err := r.db.WithContext(ctx).Where("name %like ?", keyword).Find(&result).Error; err != nil {
-		return nil, err
-	}
-	return result, nil
 }

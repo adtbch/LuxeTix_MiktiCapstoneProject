@@ -2,12 +2,12 @@ package builder
 
 import (
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/config"
+	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/handler"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/router"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/repository"
-	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/services"
-	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/handler"
+	service "github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/services"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/route"
-	
+
 	"gorm.io/gorm"
 )
 
@@ -37,19 +37,24 @@ func BuilderPrivateRoutes(cfg *config.Config, db *gorm.DB) []route.Route {
 	eventRepository := repository.NewEventRepository(db)
 	transactionRepository := repository.NewTransactionRepository(db)
 	userRepository := repository.NewUserRepository(db)
+	notificationRepository := repository.NewNotificationRepository(db)
 	//end
 
 	//service
 	tokenService := service.NewTokenService(cfg.JWTConfig.SecretKey)
 	userService := service.NewUserService(tokenService, cfg, userRepository)
 	eventService := service.NewEventService(eventRepository, transactionRepository)
+	tranService := service.NewTransactionService(transactionRepository, eventRepository)
+	notifService := service.NewNotificationService(notificationRepository)
 	// _ = service.NewEventService()
 	//end
 
 	//handler
 	eventHandler := handler.NewEventHandler(eventService, tokenService)
 	userHandler := handler.NewUserHandler(tokenService, userService)
+	tranHandler := handler.NewTransactionHandler(tranService, tokenService)
+	notifHandler := handler.NewNotificationHandler(notifService, tokenService)
 	//end
 
-	return router.PrivateRoutes(eventHandler, userHandler)
+	return router.PrivateRoutes(eventHandler, userHandler, tranHandler, notifHandler)
 }

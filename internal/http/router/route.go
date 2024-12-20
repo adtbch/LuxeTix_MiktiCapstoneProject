@@ -38,47 +38,7 @@ func PublicRoutes(event handler.EventHandler, user handler.UserHandler) []route.
 			Method:  http.MethodGet,
 			Path:    "/verify-email/:token",
 			Handler: user.VerifyEmail,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/sort/expensive",
-			Handler: event.SortFromExpensivestToCheapest,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/sort/cheapest",
-			Handler: event.SortFromCheapestToExpensivest,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/sort/newest",
-			Handler: event.SortNewestToOldest,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/filterByCategory/:category",
-			Handler: event.FilteringByCategory,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/filterByLocation/:location",
-			Handler: event.FilteringByLocation,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/filterByDate/:date",
-			Handler: event.FilteringByDate,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/filterByPrice/:price",
-			Handler: event.FilteringByPrice,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/events/filterByMinPriceAndMaxPrice/:min_price/:max_price",
-			Handler: event.FilteringMInMaxPrice, // corrected the typo
-		},
+		},	
 		{
 			Method:  http.MethodGet,
 			Path:    "/events/:id",
@@ -87,7 +47,7 @@ func PublicRoutes(event handler.EventHandler, user handler.UserHandler) []route.
 	}
 }
 
-func PrivateRoutes(event handler.EventHandler, user handler.UserHandler) []route.Route {
+func PrivateRoutes(event handler.EventHandler, user handler.UserHandler, tran handler.TransactionHandler, notif handler.NotificationHandler) []route.Route {
 	return []route.Route{
 
 		{
@@ -104,6 +64,21 @@ func PrivateRoutes(event handler.EventHandler, user handler.UserHandler) []route
 			Method:  http.MethodDelete,
 			Path:    "/events/:id",
 			Handler: event.DeleteEvent,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/create-order",
+			Handler: tran.CreateOrder,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users",
+			Handler: user.GetProfil,
+		},
+		{ 
+			Method:  http.MethodGet,
+			Path:    "/notification",
+			Handler: notif.UserGetNotification,
 		},
 	}
 }

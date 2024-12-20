@@ -1,28 +1,59 @@
 package handler
 
-// import (
-// 	"net/http"
+import (
+	"net/http"
 
-// 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/entity"
-// 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/services"
-// 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/response"
-// 	validator "github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/validator"
+	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/dto"
+	service "github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/services"
+	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/response"
 
-// 	"github.com/golang-jwt/jwt/v5"
-// 	"github.com/labstack/echo/v4"
-// )
+	"github.com/labstack/echo/v4"
+)
 
-// type TransactionHandler struct {
-// 	transactionService service.TransactionService
-// 	paymentService     service.PaymentService
-// }
+type TransactionHandler struct {
+	transactionService service.TransactionService
+	tokenService       service.TokenService
+}
 
-// func NewTransactionHandler(transactionService service.TransactionService, paymentService service.PaymentService) *TransactionHandler {
-// 	return &TransactionHandler{
-// 		transactionService: transactionService,
-// 		paymentService:     paymentService,
-// 	}
-// }
+func NewTransactionHandler(transactionService service.TransactionService, tokenService service.TokenService) TransactionHandler {
+	return TransactionHandler{transactionService, tokenService}
+}
+
+func (h *TransactionHandler) CreateOrder(ctx echo.Context) error {
+	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+
+	var req dto.CreateOrderRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+	req.UserID = userID
+
+	err = h.transactionService.CreateOrder(ctx.Request().Context(), req)
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+
+	return ctx.JSON(http.StatusCreated, response.SuccessResponse("Successfully created an order", nil))
+}
+
+func (h *TransactionHandler) GetUserTransactions(ctx echo.Context) error {
+	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+
+	transactions, err := h.transactionService.GetUserTransactions(ctx.Request().Context(), userID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully get user transactions", transactions))
+
+}
 
 // func (h *TransactionHandler) CreateOrder(ctx echo.Context) error {
 // 	var input struct {

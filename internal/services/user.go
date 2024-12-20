@@ -64,7 +64,7 @@ func (s *userService) Login(ctx context.Context, email string, password string) 
 		Email:    user.Email,
 		Username: user.Username,
 		Fullname: user.Fullname,
-		Role:     user.Role,
+		Role:     "User",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Luxe Tix",
 			ExpiresAt: jwt.NewNumericDate(expiredTime),
@@ -87,7 +87,7 @@ func (s *userService) Register(ctx context.Context, req dto.UserRegisterRequest)
 	// Cek jika email sudah terdaftar
 	exist, err := s.userRepository.GetByEmail(ctx, req.Email)
 	if err == nil && exist != nil {
-		return errors.New("Email sudah digunakan")
+		return errors.New("Email already exist")
 	}
 
 	// Hash password sebelum disimpan
@@ -98,20 +98,20 @@ func (s *userService) Register(ctx context.Context, req dto.UserRegisterRequest)
 	user.Password = string(hashedPassword)
 
 	// Simpan user ke database
-	
+
 	// Persiapkan email untuk verifikasi
 	templatePath := "./templates/email/verify-email.html"
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}
-	
+
 	var ReplacerEmail = struct {
 		Token string
 	}{
 		Token: user.Verify_token,
 	}
-	
+
 	var body bytes.Buffer
 	if err := tmpl.Execute(&body, ReplacerEmail); err != nil {
 		return err
@@ -130,12 +130,12 @@ func (s *userService) Register(ctx context.Context, req dto.UserRegisterRequest)
 		s.cfg.SMTPConfig.Username,
 		s.cfg.SMTPConfig.Password,
 	)
-	
+
 	// Coba kirim email dan pastikan jika gagal, hapus user dari database
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
-	
+
 	err = s.userRepository.Create(ctx, user)
 	if err != nil {
 		return err

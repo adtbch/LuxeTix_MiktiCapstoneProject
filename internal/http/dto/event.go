@@ -47,31 +47,22 @@ type UpdateEventByUserRequest struct {
 	Date          string `json:"date" validate:"required"`
 }
 
-type FilterMInMaxPrice struct {
-	MinPrice int64 `param:"min_price" validate:"required"`
-	MaxPrice int64 `param:"max_price" validate:"required"`
-}
+type GetAllEventRequest struct {
+	Search string `query:"search"`
+	Filter string `query:"filter"`
+	Sort   string `query:"sort"`
+	Order  string `query:"order"`
+	Page   int    `query:"page"`
+	Limit  int    `query:"limit"`
 
-type FilterCategory struct {
-	Category string `param:"category" validate:"required"`
-}
-
-type FilterLocation struct {
-	Location string `param:"location" validate:"required"`	
-}
-
-type FilterPrice struct {
-	Price int64 `param:"price" validate:"required"`
-}
-
-type FilterDate struct {
-	Date string `param:"date" validate:"required"`
-}
-
-type FilterTime struct {
-	Time string `param:"time" validate:"required"`
-}
-
-type SearchEvent struct {
-	Keyword string `param:"keyword" validate:"required"`
+	// Tambahan filter dari kode pertama
+	MinPrice      float64 `query:"min_price"`
+	MaxPrice      float64 `query:"max_price"`
+	Category      string  `query:"category"`
+	Location      string  `query:"location"`
+	Time          string  `query:"time"`
+	Date          string  `query:"date"`
+	StatusEvent   string  `query:"status_event"`
+	StatusRequest string  `query:"status_request"`
+	Price         float64 `query:"price"`
 }
