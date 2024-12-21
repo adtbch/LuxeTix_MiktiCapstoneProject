@@ -149,18 +149,30 @@ func PrivateRoutes(event handler.EventHandler, user handler.UserHandler, tran ha
 			Handler: submissions.CreateEvent,
 			Roles:   userOnly,
 		},
-		//role admin
 		{
 			Method:  http.MethodPut,
 			Path:    "/submissions",
 			Handler: submissions.UpdateSubmissionByUser,
 			Roles:   userOnly,
 		},
+		//role admin
 		{
 			Method:  http.MethodDelete,
 			Path:    "/submissions/:id",
 			Handler: submissions.CancelSubmission,
-			Roles:   userOnly,
+			Roles:   adminOnly,
+		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/submissions/:id/approve",
+			Handler: submissions.ApproveSubmission,
+			Roles:   adminOnly,
+		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/submissions/:id/reject",
+			Handler: submissions.RejectSubmission,
+			Roles:   adminOnly,
 		},
 	}
 }

@@ -40,10 +40,10 @@ func NewSubmissionService(
 	notification NotificationService,
 ) RequestEventService {
 	return &requestEventService{
-		cfg, 
-		requesteventRepository, 
-		transactionRepository, 
-		userRepository, 
+		cfg,
+		requesteventRepository,
+		transactionRepository,
+		userRepository,
 		notification,
 	}
 }
@@ -106,9 +106,19 @@ func (s *requestEventService) Approve(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
+
 	if submission.StatusRequest != "pending" {
 		return errors.New("Pengajuan ini sudah diterima atau ditolak oleh admin")
 	}
+
+	notification := &dto.NotificationInput{
+		UserID:    submission.ID,
+		Message:   "Your submission has been accepted! ",
+		Is_Read:   false,
+		Create_at: time.Now(),
+	}
+	s.notificationService.CreateNotification(ctx, *notification)
+
 	submission.StatusRequest = "accepted"
 	return s.requestEventRepository.Update(ctx, submission)
 }
@@ -121,6 +131,13 @@ func (s *requestEventService) Reject(ctx context.Context, id int64) error {
 	if submission.StatusRequest != "pending" {
 		return errors.New("Pengajuan ini sudah diterima atau ditolak oleh admin")
 	}
+	notification := &dto.NotificationInput{
+		UserID:    submission.UserID,
+		Message:   "Your submission has been rejected! ",
+		Is_Read:   false,
+		Create_at: time.Now(),
+	}
+	s.notificationService.CreateNotification(ctx, *notification)
 	submission.StatusRequest = "rejected"
 	return s.requestEventRepository.Update(ctx, submission)
 }
@@ -140,6 +157,13 @@ func (s *requestEventService) Cancel(ctx context.Context, submission *entity.Eve
 	if submission.StatusRequest != "pending" {
 		return errors.New("Pengajuan ini sudah tidak dapat dicancel karena sudah diterima atau ditolak oleh admin")
 	}
+	notification := &dto.NotificationInput{
+		UserID:    userID,
+		Message:   "Your submission has been canceled! ",
+		Is_Read:   false,
+		Create_at: time.Now(),
+	}
+	s.notificationService.CreateNotification(ctx, *notification)
 	return s.requestEventRepository.Delete(ctx, submission)
 }
 
@@ -182,6 +206,14 @@ func (s *requestEventService) Create(ctx context.Context, req dto.CreateEventReq
 		if err := d.DialAndSend(m); err != nil {
 			panic(err)
 		}
+
+		notification := &dto.NotificationInput{
+			UserID:    userID,
+			Message:   "Your submission waiting for admin approval! ",
+			Is_Read:   false,
+			Create_at: time.Now(),
+		}
+		s.notificationService.CreateNotification(ctx, *notification)
 	}
 
 	// Create the event
@@ -200,7 +232,7 @@ func (s *requestEventService) Create(ctx context.Context, req dto.CreateEventReq
 	}
 
 	// Save event to database
-	
+
 	// If price > 0, create a transaction
 	if req.Price > 0 {
 		eventID := event.ID
@@ -215,7 +247,7 @@ func (s *requestEventService) Create(ctx context.Context, req dto.CreateEventReq
 		}
 		notification := &dto.NotificationInput{
 			UserID:    userID,
-			Message:   "Your create submission succecs",
+			Message:   "Your create submission succecs, waiting for admin approval! ",
 			Is_Read:   false,
 			Create_at: time.Now(),
 		}

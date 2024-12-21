@@ -1,8 +1,7 @@
 BEGIN;
 CREATE TABLE IF NOT EXISTS "public"."notifications"(
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    type VARCHAR(255) NOT NULL,
+    userid INT NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

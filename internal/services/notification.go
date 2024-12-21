@@ -42,6 +42,7 @@ func (s *notificationService) CreateNotification(ctx context.Context, req dto.No
 	return s.notificationRepository.CreateNotification(ctx, notification)
 }
 
+
 // get notification after get chage value isRead to true and only get notification if isread false UserGetNotification
 func (s *notificationService) UserGetNotification(ctx context.Context, req dto.NotificationInput) ([]*entity.Notification, error) {
 	return s.notificationRepository.UserGetNotification(ctx, req)

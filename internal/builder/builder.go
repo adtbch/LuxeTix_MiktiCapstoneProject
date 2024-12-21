@@ -31,7 +31,7 @@ func BuilderPublicRoutes(cfg *config.Config, db *gorm.DB, midtransClient snap.Cl
 	
 	//handler
 	eventHandler := handler.NewEventHandler(eventService, tokenService)
-	tranHandler := handler.NewTransactionHandler(tranService, tokenService, paymentService, userService, eventService)
+	tranHandler := handler.NewTransactionHandler(tranService, tokenService, paymentService, userService, eventService, notificationService)
 	userHandler := handler.NewUserHandler(tokenService, userService)
 	//end
 
@@ -61,7 +61,7 @@ func BuilderPrivateRoutes(cfg *config.Config, db *gorm.DB, midtransClient snap.C
 	//handler
 	eventHandler := handler.NewEventHandler(eventService, tokenService)
 	userHandler := handler.NewUserHandler(tokenService, userService)
-	tranHandler := handler.NewTransactionHandler(tranService, tokenService, paymentService, userService, eventService)
+	tranHandler := handler.NewTransactionHandler(tranService, tokenService, paymentService, userService, eventService, notifService)
 	notifHandler := handler.NewNotificationHandler(notifService, tokenService)
 	submissionHandler := handler.NewRequestEventHandler(submissionService, tokenService)
 	//end
