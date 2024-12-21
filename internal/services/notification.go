@@ -36,7 +36,6 @@ func (s *notificationService) CreateNotification(ctx context.Context, req dto.No
 	}
 	notification := &entity.Notification{
 		UserID:  userID,
-		Type:    req.Type,
 		Message: req.Message,
 		IsRead:  false,
 	}

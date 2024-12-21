@@ -18,19 +18,17 @@ type EventRepository interface {
 	Delete(ctx context.Context, event *entity.Event) error
 	GetByIDPending(ctx context.Context, id int64) (*entity.Event, error)
 	GetAllPending(ctx context.Context) ([]entity.Event, error)
+	GetAllEventByOwner(ctx context.Context, id int64) ([]entity.Event, error)
 }
 
-// eventRepository is the implementation of EventRepository interface.
 type eventRepository struct {
 	db *gorm.DB
 }
 
-// NewEventRepository creates and returns a new instance of eventRepository.
 func NewEventRepository(db *gorm.DB) EventRepository {
 	return &eventRepository{db}
 }
 
-// GetAll retrieves all events from the database.
 func (r *eventRepository) GetAll(ctx context.Context, req dto.GetAllEventRequest) ([]entity.Event, error) {
 	result := make([]entity.Event, 0)
 	query := r.db.WithContext(ctx)
@@ -134,4 +132,12 @@ func (r *eventRepository) Update(ctx context.Context, event *entity.Event) error
 // Delete removes an event from the database.
 func (r *eventRepository) Delete(ctx context.Context, event *entity.Event) error {
 	return r.db.WithContext(ctx).Delete(&event).Error
+}
+
+func (r *eventRepository) GetAllEventByOwner(ctx context.Context, id int64) ([]entity.Event, error) {
+	var result []entity.Event
+	if err := r.db.WithContext(ctx).Where("owner_id = ?", id).Find(&result).Error; err != nil {
+		return nil, err
+	}
+	return result, nil
 }

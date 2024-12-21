@@ -1,6 +1,6 @@
-package entity
+package dto
 
-type Payment struct {
+type PaymentRequest struct {
 	OrderID string `json:"order_id" validate:"required"`
 	UserID  int64  `json:"user_id" validate:"required"`
 	EventID int64  `json:"event_id" validate:"required"`

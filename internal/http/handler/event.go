@@ -27,7 +27,7 @@ func (h *EventHandler) GetSubmissions(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
 	}
 
-	events, err := h.eventService.GetAll(ctx.Request().Context(),req)
+	events, err := h.eventService.GetAll(ctx.Request().Context(), req)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
 	}
@@ -56,10 +56,10 @@ func (h *EventHandler) GetEvents(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
 	}
 	if req.MinPrice > 0 && req.MaxPrice > 0 && req.MinPrice > req.MaxPrice {
-        return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, "minimum price cannot be greater than maximum price"))
-    }
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, "minimum price cannot be greater than maximum price"))
+	}
 
-	events, err := h.eventService.GetAll(ctx.Request().Context(),req)
+	events, err := h.eventService.GetAll(ctx.Request().Context(), req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
 	}
@@ -83,28 +83,7 @@ func (h *EventHandler) GetEvent(ctx echo.Context) error {
 }
 
 // Create an event
-func (h *EventHandler) CreateEvent(ctx echo.Context) error {
-	// Extract UserID from token
-	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
-	}
 
-	var req dto.CreateEventRequest
-	if err := ctx.Bind(&req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
-	}
-
-	// Assign UserID to the request
-	req.UserID = userID
-
-	// Create the event
-	if err := h.eventService.CreateEventByUser(ctx.Request().Context(), req); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
-	}
-
-	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully created an events",req))
-}
 
 // Update event by user (with validation for user-specific updates)
 func (h *EventHandler) UpdateEventByUser(ctx echo.Context) error {
@@ -152,4 +131,16 @@ func (h *EventHandler) DeleteEvent(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully deleted events", event))
+}
+
+func (h *EventHandler) GetAllEventByOwner(ctx echo.Context) error {
+	userID, err := h.tokenService.ExtractUserIDFromToken(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, response.ErrorResponse(http.StatusBadRequest, err.Error()))
+	}
+	events, err := h.eventService.GetAllEventByOwner(ctx.Request().Context(), userID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response.ErrorResponse(http.StatusInternalServerError, err.Error()))
+	}
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully showing events", events))
 }

@@ -69,7 +69,5 @@ func (h *NotificationHandler) UserGetNotification(ctx echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusUnprocessableEntity, err)
 	}
-	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"data": Notifications,
-	})
+	return ctx.JSON(http.StatusOK, response.SuccessResponse("Successfully created an events", Notifications))
 }

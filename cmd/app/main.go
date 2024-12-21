@@ -12,6 +12,8 @@ import (
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/builder"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/database"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/pkg/server"
+	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/snap"
 )
 
 func main() {
@@ -21,13 +23,28 @@ func main() {
 	//init & start database
 	db, err := database.InitDatabase(cfg.PostgresConfig)
 	checkError(err)
+
+	midtransClient := initMidtrans(cfg)
+
 	//RBAC
-	publicRoutes := builder.BuilderPublicRoutes(cfg, db)
-	privateRoutes := builder.BuilderPrivateRoutes(cfg, db)
+	publicRoutes := builder.BuilderPublicRoutes(cfg, db, midtransClient)
+	privateRoutes := builder.BuilderPrivateRoutes(cfg, db, midtransClient)
 	//init & start server
 	srv := server.NewServer(cfg, publicRoutes, privateRoutes)
 	runServer(srv, cfg.PORT)
 	waitForShutdown(srv)
+}
+
+func initMidtrans(cfg *config.Config) snap.Client {
+	snapClient := snap.Client{}
+
+	if cfg.ENV == "dev" {
+		snapClient.New(cfg.MidtransConfig.ServerKey, midtrans.Sandbox)
+	} else {
+		snapClient.New(cfg.MidtransConfig.ServerKey, midtrans.Production)
+	}
+
+	return snapClient
 }
 
 func waitForShutdown(srv *server.Server) {

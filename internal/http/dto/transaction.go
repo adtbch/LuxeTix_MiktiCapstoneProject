@@ -10,5 +10,6 @@ type CreateOrderRequest struct {
 	EventID  int64  `json:"event_id" validate:"required"`
 	Quantity int64  `json:"quantity" validate:"required"`
 	Amount   int64  `json:"amount" validate:"required"`
+	Type     string `json:"type" validate:"required"`
 	Status   string `json:"status" validate:"required"`
 }

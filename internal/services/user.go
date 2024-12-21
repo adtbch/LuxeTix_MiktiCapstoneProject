@@ -121,7 +121,7 @@ func (s *userService) Register(ctx context.Context, req dto.UserRegisterRequest)
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.cfg.SMTPConfig.Username)
 	m.SetHeader("To", user.Email)
-	m.SetHeader("Subject", "Fast Tix : Verifikasi Email!")
+	m.SetHeader("Subject", "Luxe Tix : Verifikasi Email!")
 	m.SetBody("text/html", body.String())
 
 	d := gomail.NewDialer(
@@ -245,7 +245,7 @@ func (s *userService) RequestResetPassword(ctx context.Context, email string) er
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.cfg.SMTPConfig.Username)
 	m.SetHeader("To", user.Email)
-	m.SetHeader("Subject", "Reset Password Request !")
+	m.SetHeader("Subject", "Luxe Tix : Reset Password Request !")
 	m.SetBody("text/html", body.String())
 
 	d := gomail.NewDialer(

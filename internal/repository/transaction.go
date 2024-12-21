@@ -12,6 +12,7 @@ type TransactionRepository interface {
 	Create(ctx context.Context, transaction *entity.Transaction) error
 	GetById(ctx context.Context, id int64) (*entity.Transaction, error)
 	GetByUser(ctx context.Context, id int64) ([]entity.Transaction, error)
+	UpdateStatus(ctx context.Context, transactionID int64, newStatus string) error 
 }
 
 type transactionRepository struct {
@@ -47,4 +48,12 @@ func (r *transactionRepository) GetByUser(ctx context.Context, id int64) ([]enti
 		return nil, err
 	}
 	return result, nil
+}
+func (r *transactionRepository) UpdateStatus(ctx context.Context, transactionID int64, newStatus string) error {
+    // Memperbarui hanya kolom status berdasarkan id
+    return r.db.WithContext(ctx).
+        Model(&entity.Transaction{}).              
+        Where("id = ?", transactionID).              
+        Update("status", newStatus).                 
+        Error
 }

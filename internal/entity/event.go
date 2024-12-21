@@ -11,7 +11,7 @@ type Event struct {
 	Date          string    `json:"date"`
 	Location      string    `json:"location"`
 	StatusEvent   string    `json:"status event" gorm:"column:statusevent"`
-	StatusRequest string    `json:"status request" gorm:"column:tatusrequest"`
+	StatusRequest string    `json:"status request" gorm:"column:statusrequest"`
 	Price         int64     `json:"price"`
 	Category      string    `json:"category"`
 	Quantity      int64     `json:"quantity"`

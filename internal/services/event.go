@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"errors"
+	
 
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/entity"
 	"github.com/adtbch/LuxeTix_MiktiCapstoneProject/internal/http/dto"
@@ -12,12 +12,13 @@ import (
 type EventService interface {
 	GetAll(ctx context.Context, req dto.GetAllEventRequest) ([]entity.Event, error)
 	GetById(ctx context.Context, id int64) (*entity.Event, error)
-	CreateEventByUser(ctx context.Context, req dto.CreateEventRequest) error
+	
 	Delete(ctx context.Context, event *entity.Event) error
 	UpdateEventbyUser(ctx context.Context, req dto.UpdateEventByUserRequest) error
 	UpdateEventbyAdmin(ctx context.Context, req dto.UpdateEventByAdminRequest) error
 	GetByIDPending(ctx context.Context, id int64) (*entity.Event, error)
 	GetAllPending(ctx context.Context) ([]entity.Event, error)
+	GetAllEventByOwner(ctx context.Context, id int64) ([]entity.Event, error)
 }
 
 type eventService struct {
@@ -40,60 +41,6 @@ func (s *eventService) GetById(ctx context.Context, id int64) (*entity.Event, er
 }
 
 // Create event by user
-func (s *eventService) CreateEventByUser(ctx context.Context, req dto.CreateEventRequest) error {
-	// Ensure valid userID
-	userID := req.UserID
-	if userID == 0 {
-		return errors.New("invalid user ID")
-	}
-
-	// Determine request status (paid/unpaid) based on price
-	statusRequest := "unpaid"
-	if req.Price == 0 {
-		statusRequest = "paid"
-	}
-
-	// Create the event
-	event := &entity.Event{
-		Title:         req.Title,
-		Location:      req.Location,
-		Time:          req.Time,
-		Date:          req.Date,
-		Price:         req.Price,
-		Description:   req.Description,
-		StatusRequest: statusRequest,
-		StatusEvent:   "available",
-		UserID:        userID,
-		Category:      req.Category,
-		Quantity:      req.Quantity,
-	}
-
-	// Save event to database
-	if err := s.EventRepository.Create(ctx, event); err != nil {
-		return err
-	}
-
-	// If price > 0, create a transaction
-	if req.Price > 0 {
-		eventID := event.ID
-		amount := int64(float64(req.Price) * 0.2) // Example: 20% of event price
-
-		transaction := &entity.Transaction{
-			EventID:  eventID,
-			UserID:   userID,
-			Amount:   amount,
-			Status:   "unpaid",
-			Quantity: 1,
-		}
-
-		// Create transaction
-		if err := s.TransactionRepository.Create(ctx, transaction); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 // Update event by user
 func (s *eventService) UpdateEventbyUser(ctx context.Context, req dto.UpdateEventByUserRequest) error {
@@ -179,6 +126,10 @@ func (s *eventService) GetByIDPending(ctx context.Context, id int64) (*entity.Ev
 // Get all pending events
 func (s *eventService) GetAllPending(ctx context.Context) ([]entity.Event, error) {
 	return s.EventRepository.GetAllPending(ctx)
+}
+
+func (s *eventService) GetAllEventByOwner(ctx context.Context, id int64) ([]entity.Event, error) {
+	return s.EventRepository.GetAllEventByOwner(ctx, id)
 }
 
 // Sort events from expensive to cheapest

@@ -2,6 +2,7 @@ package dto
 
 type GetEventByIDRequest struct {
 	ID int64 `param:"id" validate:"required"`
+	UserID int64 `json:"user_id" validate:"required"`
 }
 type DeleteEventRequest struct {
 	ID int64 `param:"id" validate:"required"`
@@ -32,10 +33,12 @@ type UpdateEventByAdminRequest struct {
 	Price         int64  `json:"price" validate:"required"`
 	Category      string `json:"category" validate:"required"`
 	Date          string `json:"date" validate:"required"`
+	Quantity      int64  `json:"quantity" validate:"required"`
 }
 
 type UpdateEventByUserRequest struct {
 	ID            int64  `param:"id" validate:"required"`
+	UserID        int64  `json:"user_id" validate:"required"`
 	Title         string `json:"title" validate:"required"`
 	Description   string `json:"description" validate:"required"`
 	Time          string `json:"time" validate:"required"`
@@ -45,6 +48,7 @@ type UpdateEventByUserRequest struct {
 	Price         int64  `json:"price" validate:"required"`
 	Category      string `json:"category" validate:"required"`
 	Date          string `json:"date" validate:"required"`
+	Quantity      int64  `json:"quantity" validate:"required"`
 }
 
 type GetAllEventRequest struct {
