@@ -22,6 +22,8 @@ type CreateUserByRequest struct {
 	Password string `json:"password" validate:"required"`
 	FullName string `json:"full_name" validate:"required"`
 	Role string `json:"role" validate:"required"`
+	Gender string `json:"gender" validate:"required"`
+	Email string `json:"email" validate:"required"`
 }
 
 type UpdateUserRequest struct {
@@ -30,4 +32,19 @@ type UpdateUserRequest struct {
 	Password string `json:"password" validate:"required"`
 	FullName string `json:"full_name" validate:"required"`
 	Role string `json:"role" validate:"required"`
+	Gender string `json:"gender" validate:"required"`
+	Email string `json:"email" validate:"required"`
+}
+
+type ResetPasswordRequest struct {
+	Token string `param:"reset_password_token" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type VerifyEmailRequest struct {
+	Token string `param:"verify_email_token" validate:"required"`
+}
+
+type RequestResetPassword struct {
+	Username string `json:"username" validate:"required"`
 }

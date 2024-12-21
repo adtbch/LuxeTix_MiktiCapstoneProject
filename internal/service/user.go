@@ -16,6 +16,15 @@ import (
 type UserService interface {
 	Register(ctx context.Context, req dto.UserRegisterRequest) error
 	Login(ctx context.Context, username, password string) (*entity.JWTCustomClaims, error)
+	GetAll(ctx context.Context) ([]entity.User, error)
+	GetByID(ctx context.Context, id int64) (*entity.User, error)
+	Create(ctx context.Context, req dto.CreateUserByRequest) error
+	Update(ctx context.Context, req dto.UpdateUserRequest) error
+	Delete(ctx context.Context, user *entity.User) error
+	ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) error
+	RequestResetPassword(ctx context.Context, username string) error
+	VerifyEmail(ctx context.Context, req dto.VerifyEmailRequest) error
+
 }
 
 type userService struct {
@@ -111,5 +120,51 @@ func (s *userService) Update(ctx context.Context, req dto.UpdateUserRequest) err
 		return err
 	}
 
-	exist
+	exist, err := s.userRepository.GetByUsername(ctx, req.Username)
+	if err == nil && exist != nil {
+		return errors.New("username already used")
+	}
+
+	if req.Username != "" {
+		user.Username = req.Username
+	}
+
+	if req.FullName != "" {
+		user.FullName = req.Username
+	}
+
+	if req.Role != "" {
+		user.Role = req.Role
+	}
+
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	
+	if req.Gender != "" {
+		switch req.Gender {
+		case "0":
+			user.Gender = "wanita"
+		case "1":
+			user.Gender = "pria"
+		}	
+	}
+
+	return s.userRepository.Update(ctx, user)
+}
+
+func (s *userService) Delete(ctx context.Context, user *entity.User) error {
+	
+}
+
+func (s *userService) ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) error {
+
+}
+
+func (s *userService) RequestResetPassword(ctx context.Context, username string) error {
+
+}
+
+func (s *userService) VerifyEmail(ctx context.Context, req dto.VerifyEmailRequest) error {
+
 }
